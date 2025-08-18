@@ -66,10 +66,10 @@ export const useAuthStore = create<AuthState>()(
 
       validateAndRefreshSession: async () => {
         const { token } = get()
-        console.log('🔍 Validating session, token exists:', !!token)
+        console.log('Validating session, token exists:', !!token)
         
         if (!token) {
-          console.log('❌ No token found, clearing session')
+          console.log('No token found, clearing session')
           set({ user: null, token: null })
           return
         }
@@ -80,21 +80,21 @@ export const useAuthStore = create<AuthState>()(
           const isExpired = payload.exp && payload.exp * 1000 < Date.now()
           
           if (isExpired) {
-            console.log('❌ Token expired, clearing session')
+            console.log('Token expired, clearing session')
             set({ user: null, token: null })
             return
           }
 
           // If token is not expired, try to validate with server
-          console.log('📞 Calling validateSession API...')
+          console.log('Calling validateSession API...')
           const response = await AuthService.validateSession(token)
-          console.log('✅ Session validation response:', !!response)
+          console.log('Session validation response:', !!response)
           
           if (response) {
-            console.log('✅ Session valid, updating user state')
+            console.log('Session valid, updating user state')
             set({ user: response.user, token: response.token })
           } else {
-            console.log('❌ Session validation failed, but token seems valid. Using cached user.')
+            console.log('Session validation failed, but token seems valid. Using cached user.')
             // If server validation fails but token is valid, keep the user logged in
             // This handles cases where the validation endpoint has cold start issues
             if (payload.userId && payload.email && payload.role) {
@@ -111,14 +111,14 @@ export const useAuthStore = create<AuthState>()(
             }
           }
         } catch (error) {
-          console.error('❌ Session validation error:', error)
+          console.error('Session validation error:', error)
           // On error, try to decode token and use cached info if valid
           try {
             const payload = JSON.parse(atob(token.split('.')[1]))
             const isExpired = payload.exp && payload.exp * 1000 < Date.now()
             
             if (!isExpired && payload.userId && payload.email && payload.role) {
-              console.log('🔄 Using cached token data due to server error')
+              console.log('Using cached token data due to server error')
               const user = {
                 id: payload.userId,
                 email: payload.email,
@@ -131,7 +131,7 @@ export const useAuthStore = create<AuthState>()(
               set({ user: null, token: null })
             }
           } catch (tokenError) {
-            console.error('❌ Failed to decode token:', tokenError)
+            console.error('Failed to decode token:', tokenError)
             set({ user: null, token: null })
           }
         }

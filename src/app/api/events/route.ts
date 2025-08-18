@@ -8,11 +8,11 @@ const CACHE_TTL = 5000 // 5 seconds
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('🔍 Fetching events...')
+    console.log('Fetching events...')
     
     // Check cache first (helps with rapid successive calls)
     if (eventCache && Date.now() - eventCache.timestamp < CACHE_TTL) {
-      console.log('📦 Returning cached events:', eventCache.data.length)
+      console.log('Returning cached events:', eventCache.data.length)
       return NextResponse.json({ events: eventCache.data })
     }
     
@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
       },
     })
 
-    console.log(`📊 Found ${events.length} events in database`)
+    console.log(`Found ${events.length} events in database`)
     if (events.length > 0) {
       console.log('Event IDs:', events.map((e: any) => ({ id: e.id, label: e.label, isActive: e.isActive })))
     }
@@ -107,7 +107,7 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    console.log(`✅ Returning ${formattedEvents.length} formatted events`)
+    console.log(`Returning ${formattedEvents.length} formatted events`)
     console.log('Formatted event IDs:', formattedEvents.map((e: any) => ({ id: e.id, label: e.label, isActive: e.isActive })))
 
     // Cache the results for a short time to help with rapid successive calls
@@ -118,7 +118,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ events: formattedEvents })
   } catch (error) {
-    console.error('❌ Error fetching events:', error)
+    console.error('Error fetching events:', error)
     return NextResponse.json(
       { error: 'Failed to fetch events' },
       { status: 500 }
@@ -198,7 +198,7 @@ export async function POST(request: NextRequest) {
 
     // Use the authenticated user's email to find the current user in this database instance
     const userEmail = auth.user.email
-    console.log('� Finding user by email:', userEmail)
+    console.log('Finding user by email:', userEmail)
 
     // Find the user in the current database instance by email
     const currentUser = await prisma.user.findUnique({
@@ -207,20 +207,20 @@ export async function POST(request: NextRequest) {
     })
     
     if (!currentUser) {
-      console.error('❌ User not found by email:', userEmail)
+      console.error('User not found by email:', userEmail)
       return NextResponse.json(
         { error: 'User not found. Please log in again.' },
         { status: 401 }
       )
     }
     
-    console.log('✅ User found by email:', { id: currentUser.id, email: currentUser.email })
+    console.log('User found by email:', { id: currentUser.id, email: currentUser.email })
     
     // Use the current database instance's user ID
     const creatorUserId = currentUser.id
 
-    console.log('🔨 Creating new event:', { label, startDate: startDateTime, isActive: 'default(true)' })
-    console.log('📝 Event data to create:', {
+    console.log('Creating new event:', { label, startDate: startDateTime, isActive: 'default(true)' })
+    console.log('Event data to create:', {
       label,
       description,
       shortDescription,
@@ -280,9 +280,9 @@ export async function POST(request: NextRequest) {
         },
       } as any,
     })
-    console.log('✅ Prisma event creation successful')
+    console.log('Prisma event creation successful')
     } catch (prismaError) {
-      console.error('❌ Prisma event creation failed:', prismaError)
+      console.error('Prisma event creation failed:', prismaError)
       throw new Error(`Database error: ${prismaError instanceof Error ? prismaError.message : String(prismaError)}`)
     }
 
@@ -314,7 +314,7 @@ export async function POST(request: NextRequest) {
       registrationCount: eventData._count?.registrations || 0,
     }
 
-    console.log('✅ Event created successfully:', { 
+    console.log('Event created successfully:', { 
       id: event.id, 
       label: event.label, 
       isActive: event.isActive,
@@ -329,7 +329,7 @@ export async function POST(request: NextRequest) {
       event: safeEvent
     })
   } catch (error) {
-    console.error('❌ Error creating event:', error)
+    console.error('Error creating event:', error)
     console.error('Error details:', {
       message: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,

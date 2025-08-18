@@ -33,10 +33,10 @@ export function verifyToken(token: string): JWTPayload | null {
   try {
     console.log('🔍 Verifying JWT token...')
     const decoded = jwt.verify(token, JWT_SECRET) as JWTPayload
-    console.log('✅ JWT token verified successfully for user:', decoded.email)
+    console.log('JWT token verified successfully for user:', decoded.email)
     return decoded
   } catch (error) {
-    console.error('❌ Token verification failed:', error)
+    console.error('Token verification failed:', error)
     return null
   }
 }

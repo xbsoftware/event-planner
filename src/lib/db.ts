@@ -32,11 +32,11 @@ export const prisma = _prisma
 
 async function initializeProductionDB() {
   try {
-    console.log('🔄 Checking database schema...')
+    console.log('Checking database schema...')
     
     // Create tables directly using SQL if they don't exist
     try {
-      console.log('📊 Creating database schema...')
+      console.log('Creating database schema...')
       
       // Create users table
       await _prisma.$executeRawUnsafe(`
@@ -135,9 +135,9 @@ async function initializeProductionDB() {
       await _prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS "users_email_key" ON "users"("email")`)
       await _prisma.$executeRawUnsafe(`CREATE UNIQUE INDEX IF NOT EXISTS "event_field_responses_registrationId_fieldId_key" ON "event_field_responses"("registrationId", "fieldId")`)
       
-      console.log('✅ Database schema created successfully!')
+      console.log('Database schema created successfully!')
     } catch (schemaError) {
-      console.log('⚠️  Schema creation completed (may have warnings)', schemaError)
+      console.log('Schema creation completed (may have warnings)', schemaError)
     }
     
     // Now check if users exist and seed if needed
@@ -145,12 +145,12 @@ async function initializeProductionDB() {
     try {
       userCount = await _prisma.user.count()
     } catch (error) {
-      console.log('ℹ️  Users table may not exist yet, will seed...')
+      console.log('Users table may not exist yet, will seed...')
       userCount = 0
     }
     
     if (userCount === 0) {
-      console.log('🌱 Seeding production database...')
+      console.log('Seeding production database...')
       
       // Import bcrypt for password hashing
       const bcrypt = await import('bcryptjs')
@@ -176,11 +176,11 @@ async function initializeProductionDB() {
         ],
       })
       
-      console.log('✅ Production database seeded successfully!')
+      console.log('Production database seeded successfully!')
     } else {
-      console.log(`ℹ️  Database already has ${userCount} users, skipping seed`)
+      console.log(`Database already has ${userCount} users, skipping seed`)
     }
   } catch (error) {
-    console.error('❌ Error initializing production database:', error)
+    console.error('Error initializing production database:', error)
   }
 }

@@ -36,7 +36,7 @@ async function main() {
       const user = await prisma.user.create({
         data: userData,
       })
-      console.log(`✅ Created user: ${user.email} (${user.role})`)
+      console.log(`Created user: ${user.email} (${user.role})`)
     } else {
       // Update existing user with password if they don't have one
       if (!existingUser.password) {
@@ -44,19 +44,19 @@ async function main() {
           where: { id: existingUser.id },
           data: { password: defaultPassword },
         })
-        console.log(`🔐 Updated password for: ${existingUser.email}`)
+        console.log(`Updated password for: ${existingUser.email}`)
       } else {
-        console.log(`⏭️  User already exists: ${userData.email}`)
+        console.log(`User already exists: ${userData.email}`)
       }
     }
   }
 
-  console.log('🎉 Database seeding completed!')
+  console.log('Database seeding completed!')
 }
 
 main()
   .catch((e) => {
-    console.error('❌ Error during seeding:', e)
+    console.error('Error during seeding:', e)
     process.exit(1)
   })
   .finally(async () => {
