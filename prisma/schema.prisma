@@ -1,0 +1,128 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Enum for user roles
+enum UserRole {
+  REGULAR
+  MANAGER
+}
+
+// User model
+model User {
+  id          String    @id @default(cuid())
+  email       String    @unique
+  password    String?   // Optional for backward compatibility
+  firstName   String?
+  lastName    String?
+  role        UserRole  @default(REGULAR)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  lastLoginAt DateTime?
+
+  // Relations (for future expansion)
+  events        Event[]             @relation("UserEvents")
+  registrations EventRegistration[] @relation("UserRegistrations")
+  
+  @@map("users")
+}
+
+// Event model
+model Event {
+  id              String    @id @default(cuid())
+  label           String    // Event title/name
+  description     String?   // Full description with rich text
+  shortDescription String?  // Brief description for cards
+  startDate       DateTime  // Event start date
+  endDate         DateTime? // Optional end date (null for single day events)
+  startTime       String?   // Optional start time (HH:MM format)
+  endTime         String?   // Optional end time (HH:MM format)
+  location        String?   // Event location
+  maxCapacity     Int?      // Maximum number of participants
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  // Relations
+  createdBy       User            @relation("UserEvents", fields: [createdById], references: [id])
+  createdById     String
+  customFields    EventCustomField[]
+  registrations   EventRegistration[]
+  
+  @@map("events")
+}
+
+// Custom form fields for event registration
+model EventCustomField {
+  id          String   @id @default(cuid())
+  eventId     String
+  label       String   // Field label
+  controlType String   // "text", "textarea", "toggle", "multiselect"
+  isRequired  Boolean  @default(false)
+  options     Json?    // For multiselect and toggle options
+  order       Int      @default(0) // Display order
+  createdAt   DateTime @default(now())
+  
+  // Relations
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  responses   EventFieldResponse[]
+  
+  @@map("event_custom_fields")
+}
+
+// Event registrations
+model EventRegistration {
+  id          String   @id @default(cuid())
+  eventId     String
+  userId      String?  // Null if anonymous registration
+  firstName   String
+  lastName    String
+  email       String
+  phone       String?
+  status      String   @default("PENDING") // "PENDING", "CONFIRMED", "CANCELLED"
+  registeredAt DateTime @default(now())
+  
+  // Relations
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  user        User?    @relation("UserRegistrations", fields: [userId], references: [id])
+  responses   EventFieldResponse[]
+  
+  @@map("event_registrations")
+}
+
+// Responses to custom fields
+model EventFieldResponse {
+  id             String   @id @default(cuid())
+  registrationId String
+  fieldId        String
+  value          String   // JSON string for complex values
+  
+  // Relations
+  registration   EventRegistration @relation(fields: [registrationId], references: [id], onDelete: Cascade)
+  field          EventCustomField  @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  
+  @@unique([registrationId, fieldId])
+  @@map("event_field_responses")
+}
+
+// Verification codes for email authentication
+model VerificationCode {
+  id        String   @id @default(cuid())
+  email     String
+  code      String
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  
+  @@map("verification_codes")
+}
