@@ -1,99 +1,109 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { Plus, Edit, Trash2, User, Crown } from 'lucide-react'
-import AuthenticatedLayout from '@/components/AuthenticatedLayout'
-import { useAuthStore } from '@/lib/stores/authStore'
-import { AddUserDialog } from './components/AddUserDialog'
-import { EditUserDialog } from './components/EditUserDialog'
-import { DeleteUserDialog } from './components/DeleteUserDialog'
-import apiClient from '@/lib/apiClient'
-import { toast } from 'sonner'
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Plus, Edit, Trash2, User, Crown } from "lucide-react";
+import AuthenticatedLayout from "@/components/AuthenticatedLayout";
+import { useAuthStore } from "@/lib/stores/authStore";
+import { AddUserDialog } from "./components/AddUserDialog";
+import { EditUserDialog } from "./components/EditUserDialog";
+import { DeleteUserDialog } from "./components/DeleteUserDialog";
+import apiClient from "@/lib/apiClient";
+import { toast } from "sonner";
 
 interface User {
-  id: string
-  email: string
-  firstName: string
-  lastName: string
-  role: 'MANAGER' | 'REGULAR'
-  isActive: boolean
-  createdAt: string
-  lastLoginAt: string | null
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: "MANAGER" | "REGULAR";
+  isActive: boolean;
+  createdAt: string;
+  lastLoginAt: string | null;
 }
 
 export default function AdminUsersPage() {
-  const { user } = useAuthStore()
-  const router = useRouter()
-  const [users, setUsers] = useState<User[]>([])
-  const [loading, setLoading] = useState(true)
+  const { user } = useAuthStore();
+  const router = useRouter();
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Dialog states
-  const [addDialogOpen, setAddDialogOpen] = useState(false)
-  const [editDialogOpen, setEditDialogOpen] = useState(false)
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   useEffect(() => {
     // Redirect if not manager
-    if (user && user.role !== 'MANAGER') {
-      router.push('/dashboard')
-      return
+    if (user && user.role !== "MANAGER") {
+      router.push("/dashboard");
+      return;
     }
-    
+
     if (user) {
-      loadUsers()
+      loadUsers();
     }
-  }, [user, router])
+  }, [user, router]);
 
   const loadUsers = async () => {
     try {
-      const response = await apiClient.get('/api/users')
-      setUsers(response.data.users)
+      console.log("Loading users");
+      const response = await apiClient.get("/api/users");
+      setUsers(response.data.users);
     } catch (error) {
-      console.error('Error loading users:', error)
-      toast.error('Failed to load users')
+      console.error("Error loading users:", error);
+      toast.error("Failed to load users");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleEditUser = (user: User) => {
-    setSelectedUser(user)
-    setEditDialogOpen(true)
-  }
+    setSelectedUser(user);
+    setEditDialogOpen(true);
+  };
 
   const handleDeleteUser = (user: User) => {
-    setSelectedUser(user)
-    setDeleteDialogOpen(true)
-  }
+    setSelectedUser(user);
+    setDeleteDialogOpen(true);
+  };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
-  if (!user || user.role !== 'MANAGER') {
+  if (!user || user.role !== "MANAGER") {
     return (
       <AuthenticatedLayout>
         <div className="container mx-auto px-4 py-8">
           <Card>
             <CardContent className="p-6">
-              <p className="text-center text-gray-600">Access denied. Manager role required.</p>
+              <p className="text-center text-gray-600">
+                Access denied. Manager role required.
+              </p>
             </CardContent>
           </Card>
         </div>
       </AuthenticatedLayout>
-    )
+    );
   }
 
   if (loading) {
@@ -106,7 +116,7 @@ export default function AdminUsersPage() {
           </div>
         </div>
       </AuthenticatedLayout>
-    )
+    );
   }
 
   return (
@@ -115,9 +125,14 @@ export default function AdminUsersPage() {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center space-x-3">
             <User className="h-8 w-8 text-blue-600" />
-            <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
+            <h1 className="text-3xl font-bold text-gray-900">
+              User Management
+            </h1>
           </div>
-          <Button onClick={() => setAddDialogOpen(true)} className="bg-[#E91E63] hover:bg-[#C2185B] text-white">
+          <Button
+            onClick={() => setAddDialogOpen(true)}
+            className="bg-[#E91E63] hover:bg-[#C2185B] text-white"
+          >
             <Plus className="h-4 w-4 mr-2" />
             Add User
           </Button>
@@ -148,11 +163,17 @@ export default function AdminUsersPage() {
                     </TableCell>
                     <TableCell>{userData.email}</TableCell>
                     <TableCell>
-                      <Badge 
-                        variant={userData.role === 'MANAGER' ? 'default' : 'secondary'} 
-                        className={`flex items-center space-x-1 ${userData.role === 'MANAGER' ? 'bg-[#E91E63] text-white' : 'bg-gray-100 text-gray-800'}`}
+                      <Badge
+                        variant={
+                          userData.role === "MANAGER" ? "default" : "secondary"
+                        }
+                        className={`flex items-center space-x-1 ${
+                          userData.role === "MANAGER"
+                            ? "bg-[#E91E63] text-white"
+                            : "bg-gray-100 text-gray-800"
+                        }`}
                       >
-                        {userData.role === 'MANAGER' ? (
+                        {userData.role === "MANAGER" ? (
                           <Crown className="h-3 w-3" />
                         ) : (
                           <User className="h-3 w-3" />
@@ -161,28 +182,32 @@ export default function AdminUsersPage() {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={userData.isActive ? 'default' : 'destructive'}>
-                        {userData.isActive ? 'Active' : 'Inactive'}
+                      <Badge
+                        variant={userData.isActive ? "default" : "destructive"}
+                      >
+                        {userData.isActive ? "Active" : "Inactive"}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-sm text-gray-600">
                       {formatDate(userData.createdAt)}
                     </TableCell>
                     <TableCell className="text-sm text-gray-600">
-                      {userData.lastLoginAt ? formatDate(userData.lastLoginAt) : 'Never'}
+                      {userData.lastLoginAt
+                        ? formatDate(userData.lastLoginAt)
+                        : "Never"}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2">
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           size="sm"
                           onClick={() => handleEditUser(userData)}
                           className="border-[#E91E63] text-[#E91E63] hover:bg-[#E91E63] hover:text-white"
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           size="sm"
                           onClick={() => handleDeleteUser(userData)}
                           className="border-[#E91E63] text-[#E91E63] hover:bg-[#E91E63] hover:text-white"
@@ -195,7 +220,7 @@ export default function AdminUsersPage() {
                 ))}
               </TableBody>
             </Table>
-            
+
             {users.length === 0 && (
               <div className="text-center py-8 text-gray-500">
                 No users found. Add some users to get started.
@@ -229,5 +254,5 @@ export default function AdminUsersPage() {
         />
       </div>
     </AuthenticatedLayout>
-  )
+  );
 }

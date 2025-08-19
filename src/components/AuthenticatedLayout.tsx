@@ -1,34 +1,35 @@
-'use client'
+"use client";
 
-import { useAuthStore } from '@/lib/stores/authStore'
-import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
-import Header from './Header'
+import { useAuthStore } from "@/lib/stores/authStore";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 interface AuthenticatedLayoutProps {
-  children: React.ReactNode
+  children: React.ReactNode;
 }
 
-export default function AuthenticatedLayout({ children }: AuthenticatedLayoutProps) {
-  const { user, token, validateAndRefreshSession } = useAuthStore()
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState(true)
+export default function AuthenticatedLayout({
+  children,
+}: AuthenticatedLayoutProps) {
+  const { user, token, validateAndRefreshSession } = useAuthStore();
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Validate session immediately when component mounts
     const validateSession = async () => {
-      await validateAndRefreshSession()
-      setIsLoading(false)
-    }
+      await validateAndRefreshSession();
+      setIsLoading(false);
+    };
 
-    validateSession()
-  }, [validateAndRefreshSession])
+    validateSession();
+  }, [validateAndRefreshSession]);
 
   useEffect(() => {
     if (!isLoading && (!user || !token)) {
-      router.push('/')
+      router.push("/");
     }
-  }, [user, token, router, isLoading])
+  }, [user, token, router, isLoading]);
 
   // Show loading state while checking authentication
   if (isLoading) {
@@ -39,21 +40,17 @@ export default function AuthenticatedLayout({ children }: AuthenticatedLayoutPro
           <p className="mt-2 text-gray-600">Loading...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (!user) {
-    return null
+    return null;
   }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      <Header />
-      
       {/* Main Content */}
-      <main className="flex-1 p-6">
-        {children}
-      </main>
+      <main className="flex-1 p-6">{children}</main>
     </div>
-  )
+  );
 }
