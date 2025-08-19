@@ -8,6 +8,7 @@ import { getDateTimeInfo } from "@/lib/utils/dateTime";
 import { ManagerActions } from "./ManagerActions";
 import { UserActions } from "./UserActions";
 import { useAuthStore } from "@/lib/stores/authStore";
+import { useRouter } from "next/navigation";
 import {
   getEventStatusVariant,
   getEventStatusClassName,
@@ -19,10 +20,12 @@ interface EventCardProps {
   event: EventData;
   onEdit: (event: EventData) => void;
   onDelete: (event: EventData) => void;
+  onCopy?: (event: EventData) => void;
 }
 
-export function EventCard({ event, onEdit, onDelete }: EventCardProps) {
+export function EventCard({ event, onEdit, onDelete, onCopy }: EventCardProps) {
   const { user } = useAuthStore();
+  const router = useRouter();
 
   const dateTimeRange = getDateTimeInfo(event);
 
@@ -37,7 +40,18 @@ export function EventCard({ event, onEdit, onDelete }: EventCardProps) {
 
   return (
     <Card
-      className={`h-full flex flex-col ${!event.isActive ? "opacity-60" : ""}`}
+      className={`h-full flex flex-col ${
+        !event.isActive ? "opacity-60" : ""
+      } cursor-pointer hover:shadow-md transition-shadow`}
+      onClick={() => router.push(`/events/${event.id}`)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          router.push(`/events/${event.id}`);
+        }
+      }}
     >
       <CardContent className="p-6 flex flex-col h-full">
         {/* Header */}
@@ -103,6 +117,7 @@ export function EventCard({ event, onEdit, onDelete }: EventCardProps) {
                 event={event}
                 onEdit={onEdit}
                 onDelete={onDelete}
+                onCopy={onCopy}
                 compact
               />
             ) : (

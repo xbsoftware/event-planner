@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Eye, Edit, Trash2, Share2 } from "lucide-react";
+import { Eye, Edit, Trash2, Share2, Copy } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { EventData } from "@/services/eventService";
 import { shareEventLink } from "@/lib/utils/share";
@@ -12,6 +12,7 @@ interface ManagerActionsProps {
   onEdit: (event: EventData) => void;
   onDelete: (event: EventData) => void;
   compact?: boolean;
+  onCopy?: (event: EventData) => void;
 }
 
 export function ManagerActions({
@@ -19,6 +20,7 @@ export function ManagerActions({
   onEdit,
   onDelete,
   compact,
+  onCopy,
 }: ManagerActionsProps) {
   const router = useRouter();
   const isCompact = !!compact;
@@ -31,7 +33,29 @@ export function ManagerActions({
   } as const;
 
   return (
-    <div className={`flex ${containerSpacing}`}>
+    <div
+      className={`flex ${containerSpacing}`}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <Button
+        variant="outline"
+        size={isCompact ? "icon" : "sm"}
+        onClick={() => onCopy?.(event)}
+        style={outlineStyle}
+        className={outlineClass}
+        title="Copy"
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = "#E91E63";
+          e.currentTarget.style.color = "white";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = "transparent";
+          e.currentTarget.style.color = "#E91E63";
+        }}
+      >
+        <Copy className={isCompact ? "h-4 w-4" : "h-4 w-4 mr-1"} />
+        {!isCompact && <span>Copy</span>}
+      </Button>
       <Button
         variant="outline"
         size={isCompact ? "icon" : "sm"}

@@ -34,6 +34,7 @@ import {
   Edit,
   Printer,
   Share2,
+  Copy,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -48,6 +49,7 @@ import {
 } from "@/lib/utils/eventStatus";
 import { formatDateLong, formatTimeShort } from "@/lib/utils/dateTime";
 import { shareEventLink } from "@/lib/utils/share";
+import { CreateEventDialog } from "../components/CreateEventDialog";
 
 export default function EventViewPage() {
   const params = useParams();
@@ -58,6 +60,7 @@ export default function EventViewPage() {
   const [isRegistered, setIsRegistered] = useState(false);
   const [registrationData, setRegistrationData] = useState<any>(null);
   const [registrationLoading, setRegistrationLoading] = useState(false);
+  const [copyDialogOpen, setCopyDialogOpen] = useState(false);
 
   // Registration form state
   const [registrationDialogOpen, setRegistrationDialogOpen] = useState(false);
@@ -958,6 +961,16 @@ export default function EventViewPage() {
                 Edit Event
               </Button>
             )}
+            {user?.role === "MANAGER" && (
+              <Button
+                variant="outline"
+                onClick={() => setCopyDialogOpen(true)}
+                className="border-[#E91E63] text-[#E91E63] hover:bg-[#E91E63] hover:text-white"
+              >
+                <Copy className="h-4 w-4 mr-2" />
+                Copy
+              </Button>
+            )}
             <Button
               variant="outline"
               onClick={async () => {
@@ -1419,6 +1432,40 @@ export default function EventViewPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Copy Event (prefilled create) */}
+      <CreateEventDialog
+        open={copyDialogOpen}
+        onOpenChange={setCopyDialogOpen}
+        onEventCreated={(created) => {
+          setCopyDialogOpen(false);
+          if (created?.id) {
+            router.push(`/events/${created.id}`);
+          }
+        }}
+        initialData={
+          event
+            ? {
+                label: `${event.label} (copy)`,
+                description: event.description || "",
+                shortDescription: event.shortDescription || "",
+                startDate: event.startDate ? event.startDate.split("T")[0] : "",
+                endDate: event.endDate ? event.endDate.split("T")[0] : "",
+                startTime: event.startTime || "",
+                endTime: event.endTime || "",
+                location: event.location || "",
+                maxCapacity: event.maxCapacity,
+                customFields: (event.customFields || []).map((cf) => ({
+                  label: cf.label,
+                  controlType: cf.controlType,
+                  isRequired: cf.isRequired,
+                  options: cf.options,
+                  order: cf.order,
+                })),
+              }
+            : undefined
+        }
+      />
     </>
   );
 }

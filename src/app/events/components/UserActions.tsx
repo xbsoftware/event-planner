@@ -39,6 +39,8 @@ export function UserActions({ event }: UserActionsProps) {
           ? ""
           : "bg-[#E91E63] hover:bg-[#C2185B] text-white"
       }
+      onMouseDown={(e) => e.stopPropagation()}
+      onClickCapture={(e) => e.stopPropagation()}
     >
       {getButtonText()}
     </Button>
