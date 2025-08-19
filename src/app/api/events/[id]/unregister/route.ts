@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { isEventPast } from '@/utils/eventStatus'
+import { isEventPast } from '@/lib/utils/eventStatus'
 import { prisma } from '@/lib/db'
 
 export async function DELETE(

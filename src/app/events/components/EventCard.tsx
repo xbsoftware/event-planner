@@ -1,45 +1,44 @@
-'use client'
+"use client";
 
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Calendar, MapPin, Users, Clock } from 'lucide-react'
-import { EventData } from '@/services/eventService'
-import { ManagerActions } from './ManagerActions'
-import { UserActions } from './UserActions'
-import { useAuthStore } from '@/lib/stores/authStore'
-import { getEventStatus, getEventStatusVariant, getEventStatusClassName, isEventPast } from '@/utils/eventStatus'
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Calendar, MapPin, Users } from "lucide-react";
+import { EventData } from "@/services/eventService";
+import { getDateTimeInfo } from "@/lib/utils/dateTime";
+import { ManagerActions } from "./ManagerActions";
+import { UserActions } from "./UserActions";
+import { useAuthStore } from "@/lib/stores/authStore";
+import {
+  getEventStatusVariant,
+  getEventStatusClassName,
+  isEventPast,
+  isEventRunning,
+} from "@/lib/utils/eventStatus";
 
 interface EventCardProps {
-  event: EventData
-  onEdit: (event: EventData) => void
-  onDelete: (event: EventData) => void
+  event: EventData;
+  onEdit: (event: EventData) => void;
+  onDelete: (event: EventData) => void;
 }
 
 export function EventCard({ event, onEdit, onDelete }: EventCardProps) {
-  const { user } = useAuthStore()
+  const { user } = useAuthStore();
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    })
-  }
+  const dateTimeRange = getDateTimeInfo(event);
 
-  const formatTime = (timeString: string) => {
-    return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    })
-  }
-
-  const eventStatus = getEventStatus(event)
-  const isPastEvent = isEventPast(event)
+  const isPastEvent = isEventPast(event);
+  const isRunningEvent = isEventRunning(event);
+  const registrationCount = event.registrationCount || 0;
+  const badgeText = isPastEvent
+    ? `Past: Attended ${registrationCount} people`
+    : isRunningEvent
+    ? `Running: ${registrationCount} people`
+    : `Upcoming: Registered ${registrationCount} people`;
 
   return (
-    <Card className={`h-full flex flex-col ${!event.isActive ? 'opacity-60' : ''}`}>
+    <Card
+      className={`h-full flex flex-col ${!event.isActive ? "opacity-60" : ""}`}
+    >
       <CardContent className="p-6 flex flex-col h-full">
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
@@ -54,15 +53,13 @@ export function EventCard({ event, onEdit, onDelete }: EventCardProps) {
             )}
           </div>
           <div className="flex flex-col items-end space-y-1 ml-4">
-            <Badge 
+            <Badge
               variant={getEventStatusVariant(event)}
               className={getEventStatusClassName(event)}
             >
-              {eventStatus}
+              {badgeText}
             </Badge>
-            {!event.isActive && (
-              <Badge variant="destructive">Inactive</Badge>
-            )}
+            {!event.isActive && <Badge variant="destructive">Inactive</Badge>}
           </div>
         </div>
 
@@ -70,26 +67,16 @@ export function EventCard({ event, onEdit, onDelete }: EventCardProps) {
         <div className="space-y-2 flex-1">
           <div className="flex items-center text-sm text-gray-600">
             <Calendar className="h-4 w-4 mr-2 flex-shrink-0" />
-            <span>{formatDate(event.startDate)}</span>
+            <span>{dateTimeRange}</span>
           </div>
-          
-          {event.startTime && (
-            <div className="flex items-center text-sm text-gray-600">
-              <Clock className="h-4 w-4 mr-2 flex-shrink-0" />
-              <span>
-                {formatTime(event.startTime)}
-                {event.endTime && ` - ${formatTime(event.endTime)}`}
-              </span>
-            </div>
-          )}
-          
+
           {event.location && (
             <div className="flex items-center text-sm text-gray-600">
               <MapPin className="h-4 w-4 mr-2 flex-shrink-0" />
               <span className="truncate">{event.location}</span>
             </div>
           )}
-          
+
           {event.maxCapacity && (
             <div className="flex items-center text-sm text-gray-600">
               <Users className="h-4 w-4 mr-2 flex-shrink-0" />
@@ -105,23 +92,24 @@ export function EventCard({ event, onEdit, onDelete }: EventCardProps) {
           <div className="flex items-center justify-between">
             <div className="text-xs text-gray-500">
               {isPastEvent && "Event completed"}
-              {!isPastEvent && event.maxCapacity && (event.registrationCount || 0) >= event.maxCapacity && "Event full"}
+              {!isPastEvent &&
+                event.maxCapacity &&
+                (event.registrationCount || 0) >= event.maxCapacity &&
+                "Event full"}
             </div>
-            
-            {user?.role === 'MANAGER' ? (
-              <ManagerActions 
+
+            {user?.role === "MANAGER" ? (
+              <ManagerActions
                 event={event}
                 onEdit={onEdit}
                 onDelete={onDelete}
               />
             ) : (
-              <UserActions 
-                event={event}
-              />
+              <UserActions event={event} />
             )}
           </div>
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
