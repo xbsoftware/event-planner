@@ -4,6 +4,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 import {
   Dialog,
   DialogContent,
@@ -993,15 +994,28 @@ export default function EventViewPage() {
             <Card>
               <CardHeader>
                 <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="text-3xl font-bold text-gray-900 mb-2">
-                      {event.label}
-                    </CardTitle>
-                    {event.shortDescription && (
-                      <p className="text-lg text-gray-600 mb-4">
-                        {event.shortDescription}
-                      </p>
+                  <div className="flex-1 flex items-start gap-3">
+                    {event.avatarUrl && (
+                      <div className="flex-shrink-0">
+                        <Image
+                          src={event.avatarUrl}
+                          alt={event.label}
+                          width={96}
+                          height={96}
+                          className="rounded-md object-cover w-24 h-24"
+                        />
+                      </div>
                     )}
+                    <div>
+                      <CardTitle className="text-3xl font-bold text-gray-900 mb-2">
+                        {event.label}
+                      </CardTitle>
+                      {event.shortDescription && (
+                        <p className="text-lg text-gray-600 mb-4">
+                          {event.shortDescription}
+                        </p>
+                      )}
+                    </div>
                   </div>
                   <Badge
                     variant={getEventStatusVariant(event)}

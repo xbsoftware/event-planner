@@ -1,160 +1,216 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Checkbox } from '@/components/ui/checkbox'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
-import { Plus, X, GripVertical } from 'lucide-react'
-import { EventService, EventData, EventCustomFieldData } from '@/services/eventService'
-import { useAuthStore } from '@/lib/stores/authStore'
-import { toast } from 'sonner'
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Plus, X, GripVertical } from "lucide-react";
+import {
+  EventService,
+  EventData,
+  EventCustomFieldData,
+} from "@/services/eventService";
+import { useAuthStore } from "@/lib/stores/authStore";
+import { toast } from "sonner";
 
-type CustomFieldType = 'text' | 'textarea' | 'toggle' | 'multiselect'
+type CustomFieldType = "text" | "textarea" | "toggle" | "multiselect";
 
 interface CustomFieldForm extends EventCustomFieldData {
-  tempId: string // For managing form state before saving
+  tempId: string; // For managing form state before saving
 }
 
 interface EditEventDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  event: EventData | null
-  onEventUpdated: () => void
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  event: EventData | null;
+  onEventUpdated: () => void;
 }
 
-export function EditEventDialog({ open, onOpenChange, event, onEventUpdated }: EditEventDialogProps) {
-  const { user } = useAuthStore()
-  const [loading, setLoading] = useState(false)
-  
+export function EditEventDialog({
+  open,
+  onOpenChange,
+  event,
+  onEventUpdated,
+}: EditEventDialogProps) {
+  const { user } = useAuthStore();
+  const [loading, setLoading] = useState(false);
+
   const [editEvent, setEditEvent] = useState({
-    label: '',
-    description: '',
-    shortDescription: '',
-    startDate: '',
-    endDate: '',
-    startTime: '',
-    endTime: '',
-    location: '',
+    label: "",
+    description: "",
+    shortDescription: "",
+    avatarUrl: "",
+    startDate: "",
+    endDate: "",
+    startTime: "",
+    endTime: "",
+    location: "",
     maxCapacity: undefined as number | undefined,
-    currentUserRole: user?.role || 'REGULAR'
-  })
+    currentUserRole: user?.role || "REGULAR",
+  });
 
   // Custom Fields State
-  const [customFields, setCustomFields] = useState<CustomFieldForm[]>([])
-  const [fieldCounter, setFieldCounter] = useState(0)
+  const [customFields, setCustomFields] = useState<CustomFieldForm[]>([]);
+  const [fieldCounter, setFieldCounter] = useState(0);
+  const [uploading, setUploading] = useState(false);
+  const [existingUploads, setExistingUploads] = useState<
+    { name: string; url: string }[]
+  >([]);
 
   useEffect(() => {
     if (event) {
       setEditEvent({
         label: event.label,
-        description: event.description || '',
-        shortDescription: event.shortDescription || '',
-        startDate: event.startDate.split('T')[0],
-        endDate: event.endDate ? event.endDate.split('T')[0] : '',
-        startTime: event.startTime || '',
-        endTime: event.endTime || '',
-        location: event.location || '',
+        description: event.description || "",
+        shortDescription: event.shortDescription || "",
+        avatarUrl: (event as any).avatarUrl || "",
+        startDate: event.startDate.split("T")[0],
+        endDate: event.endDate ? event.endDate.split("T")[0] : "",
+        startTime: event.startTime || "",
+        endTime: event.endTime || "",
+        location: event.location || "",
         maxCapacity: event.maxCapacity,
-        currentUserRole: user?.role || 'REGULAR'
-      })
+        currentUserRole: user?.role || "REGULAR",
+      });
 
       // Convert existing custom fields to form state
       if (event.customFields) {
         const formFields = event.customFields.map((field, index) => ({
           ...field,
           tempId: `existing-${field.id || index}`,
-          order: index
-        }))
-        setCustomFields(formFields)
-        setFieldCounter(formFields.length)
+          order: index,
+        }));
+        setCustomFields(formFields);
+        setFieldCounter(formFields.length);
       } else {
-        setCustomFields([])
-        setFieldCounter(0)
+        setCustomFields([]);
+        setFieldCounter(0);
       }
     }
-  }, [event, user])
+  }, [event, user]);
+
+  useEffect(() => {
+    const loadUploads = async () => {
+      try {
+        const res = await fetch("/api/upload");
+        const data = await res.json();
+        if (res.ok) setExistingUploads(data.uploads || []);
+      } catch {}
+    };
+    if (open) loadUploads();
+  }, [open]);
 
   const resetForm = () => {
     setEditEvent({
-      label: '',
-      description: '',
-      shortDescription: '',
-      startDate: '',
-      endDate: '',
-      startTime: '',
-      endTime: '',
-      location: '',
+      label: "",
+      description: "",
+      shortDescription: "",
+      avatarUrl: "",
+      startDate: "",
+      endDate: "",
+      startTime: "",
+      endTime: "",
+      location: "",
       maxCapacity: undefined,
-      currentUserRole: user?.role || 'REGULAR'
-    })
-    setCustomFields([])
-    setFieldCounter(0)
-  }
+      currentUserRole: user?.role || "REGULAR",
+    });
+    setCustomFields([]);
+    setFieldCounter(0);
+  };
 
   const addCustomField = () => {
     const newField: CustomFieldForm = {
       tempId: `field-${fieldCounter}`,
-      label: '',
-      controlType: 'text',
+      label: "",
+      controlType: "text",
       isRequired: false,
       options: undefined,
-      order: customFields.length
-    }
-    setCustomFields([...customFields, newField])
-    setFieldCounter(fieldCounter + 1)
-  }
+      order: customFields.length,
+    };
+    setCustomFields([...customFields, newField]);
+    setFieldCounter(fieldCounter + 1);
+  };
 
-  const updateCustomField = (tempId: string, updates: Partial<CustomFieldForm>) => {
-    setCustomFields(fields => 
-      fields.map(field => 
+  const updateCustomField = (
+    tempId: string,
+    updates: Partial<CustomFieldForm>
+  ) => {
+    setCustomFields((fields) =>
+      fields.map((field) =>
         field.tempId === tempId ? { ...field, ...updates } : field
       )
-    )
-  }
+    );
+  };
 
   const removeCustomField = (tempId: string) => {
-    setCustomFields(fields => 
-      fields.filter(field => field.tempId !== tempId)
+    setCustomFields((fields) =>
+      fields
+        .filter((field) => field.tempId !== tempId)
         .map((field, index) => ({ ...field, order: index }))
-    )
-  }
+    );
+  };
 
   const addFieldOption = (tempId: string) => {
-    const field = customFields.find(f => f.tempId === tempId)
-    if (!field) return
+    const field = customFields.find((f) => f.tempId === tempId);
+    if (!field) return;
 
-    const newOptions = [...(field.options || []), '']
-    updateCustomField(tempId, { options: newOptions })
-  }
+    const newOptions = [...(field.options || []), ""];
+    updateCustomField(tempId, { options: newOptions });
+  };
 
-  const updateFieldOption = (tempId: string, optionIndex: number, value: string) => {
-    const field = customFields.find(f => f.tempId === tempId)
-    if (!field || !field.options) return
+  const updateFieldOption = (
+    tempId: string,
+    optionIndex: number,
+    value: string
+  ) => {
+    const field = customFields.find((f) => f.tempId === tempId);
+    if (!field || !field.options) return;
 
-    const newOptions = [...field.options]
-    newOptions[optionIndex] = value
-    updateCustomField(tempId, { options: newOptions })
-  }
+    const newOptions = [...field.options];
+    newOptions[optionIndex] = value;
+    updateCustomField(tempId, { options: newOptions });
+  };
 
   const removeFieldOption = (tempId: string, optionIndex: number) => {
-    const field = customFields.find(f => f.tempId === tempId)
-    if (!field || !field.options) return
+    const field = customFields.find((f) => f.tempId === tempId);
+    if (!field || !field.options) return;
 
-    const newOptions = field.options.filter((_, index) => index !== optionIndex)
-    updateCustomField(tempId, { options: newOptions })
-  }
+    const newOptions = field.options.filter(
+      (_, index) => index !== optionIndex
+    );
+    updateCustomField(tempId, { options: newOptions });
+  };
 
   const handleUpdate = async () => {
-    if (!editEvent.label || !editEvent.startDate || !editEvent.endDate || !user || !event) {
-      toast.error('Please fill in required fields')
-      return
+    if (
+      !editEvent.label ||
+      !editEvent.startDate ||
+      !editEvent.endDate ||
+      !user ||
+      !event
+    ) {
+      toast.error("Please fill in required fields");
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
     try {
       const eventData = {
         ...editEvent,
@@ -164,27 +220,30 @@ export function EditEventDialog({ open, onOpenChange, event, onEventUpdated }: E
           controlType: field.controlType,
           isRequired: field.isRequired,
           options: field.options,
-          order: index
+          order: index,
         })),
-        currentUserRole: user.role
-      }
-      await EventService.updateEvent(event.id, eventData)
-      onOpenChange(false)
-      resetForm()
-      onEventUpdated()
-      toast.success('Event updated successfully')
+        currentUserRole: user.role,
+      };
+      await EventService.updateEvent(event.id, eventData);
+      onOpenChange(false);
+      resetForm();
+      onEventUpdated();
+      toast.success("Event updated successfully");
     } catch (error) {
       // Error is already handled by EventService
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => {
-      onOpenChange(isOpen)
-      if (!isOpen) resetForm()
-    }}>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        onOpenChange(isOpen);
+        if (!isOpen) resetForm();
+      }}
+    >
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Event</DialogTitle>
@@ -199,9 +258,81 @@ export function EditEventDialog({ open, onOpenChange, event, onEventUpdated }: E
             <Input
               id="edit-label"
               value={editEvent.label}
-              onChange={(e) => setEditEvent({ ...editEvent, label: e.target.value })}
+              onChange={(e) =>
+                setEditEvent({ ...editEvent, label: e.target.value })
+              }
               placeholder="Enter event name"
             />
+          </div>
+
+          <div>
+            <Label htmlFor="edit-avatarUrl">Avatar Image URL</Label>
+            <Input
+              id="edit-avatarUrl"
+              value={editEvent.avatarUrl || ""}
+              onChange={(e) =>
+                setEditEvent({ ...editEvent, avatarUrl: e.target.value })
+              }
+              placeholder="https://... or /uploads/..."
+            />
+            <div className="mt-2 flex items-center gap-2">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  try {
+                    setUploading(true);
+                    const fd = new FormData();
+                    fd.append("file", file);
+                    const res = await fetch("/api/upload", {
+                      method: "POST",
+                      body: fd,
+                    });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error || "Upload failed");
+                    setEditEvent((prev) => ({ ...prev, avatarUrl: data.url }));
+                  } catch (err: any) {
+                    toast.error(err.message || "Upload failed");
+                  } finally {
+                    setUploading(false);
+                  }
+                }}
+              />
+              {uploading && (
+                <span className="text-xs text-gray-500">Uploading...</span>
+              )}
+            </div>
+            {existingUploads.length > 0 && (
+              <div className="mt-2">
+                <Label className="text-sm">Or pick from existing</Label>
+                <div className="mt-1 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 max-h-40 overflow-auto p-1 border rounded">
+                  {existingUploads.map((u) => (
+                    <button
+                      key={u.url}
+                      type="button"
+                      className={`relative h-16 rounded overflow-hidden border ${
+                        editEvent.avatarUrl === u.url
+                          ? "ring-2 ring-[#E91E63]"
+                          : ""
+                      }`}
+                      onClick={() =>
+                        setEditEvent((prev) => ({ ...prev, avatarUrl: u.url }))
+                      }
+                      title={u.name}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={u.url}
+                        alt={u.name}
+                        className="object-cover w-full h-full"
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div>
@@ -209,7 +340,9 @@ export function EditEventDialog({ open, onOpenChange, event, onEventUpdated }: E
             <Textarea
               id="edit-description"
               value={editEvent.description}
-              onChange={(e) => setEditEvent({ ...editEvent, description: e.target.value })}
+              onChange={(e) =>
+                setEditEvent({ ...editEvent, description: e.target.value })
+              }
               placeholder="Enter detailed event description"
               rows={3}
             />
@@ -219,8 +352,10 @@ export function EditEventDialog({ open, onOpenChange, event, onEventUpdated }: E
             <Label htmlFor="edit-shortDescription">Short Description</Label>
             <Textarea
               id="edit-shortDescription"
-              value={editEvent.shortDescription || ''}
-              onChange={(e) => setEditEvent({ ...editEvent, shortDescription: e.target.value })}
+              value={editEvent.shortDescription || ""}
+              onChange={(e) =>
+                setEditEvent({ ...editEvent, shortDescription: e.target.value })
+              }
               placeholder="Enter brief description for event cards (optional)"
               rows={2}
             />
@@ -233,7 +368,9 @@ export function EditEventDialog({ open, onOpenChange, event, onEventUpdated }: E
                 id="edit-startDate"
                 type="date"
                 value={editEvent.startDate}
-                onChange={(e) => setEditEvent({ ...editEvent, startDate: e.target.value })}
+                onChange={(e) =>
+                  setEditEvent({ ...editEvent, startDate: e.target.value })
+                }
               />
             </div>
             <div>
@@ -242,7 +379,9 @@ export function EditEventDialog({ open, onOpenChange, event, onEventUpdated }: E
                 id="edit-endDate"
                 type="date"
                 value={editEvent.endDate}
-                onChange={(e) => setEditEvent({ ...editEvent, endDate: e.target.value })}
+                onChange={(e) =>
+                  setEditEvent({ ...editEvent, endDate: e.target.value })
+                }
               />
             </div>
           </div>
@@ -254,7 +393,9 @@ export function EditEventDialog({ open, onOpenChange, event, onEventUpdated }: E
                 id="edit-startTime"
                 type="time"
                 value={editEvent.startTime}
-                onChange={(e) => setEditEvent({ ...editEvent, startTime: e.target.value })}
+                onChange={(e) =>
+                  setEditEvent({ ...editEvent, startTime: e.target.value })
+                }
               />
             </div>
             <div>
@@ -263,7 +404,9 @@ export function EditEventDialog({ open, onOpenChange, event, onEventUpdated }: E
                 id="edit-endTime"
                 type="time"
                 value={editEvent.endTime}
-                onChange={(e) => setEditEvent({ ...editEvent, endTime: e.target.value })}
+                onChange={(e) =>
+                  setEditEvent({ ...editEvent, endTime: e.target.value })
+                }
               />
             </div>
           </div>
@@ -273,7 +416,9 @@ export function EditEventDialog({ open, onOpenChange, event, onEventUpdated }: E
             <Input
               id="edit-location"
               value={editEvent.location}
-              onChange={(e) => setEditEvent({ ...editEvent, location: e.target.value })}
+              onChange={(e) =>
+                setEditEvent({ ...editEvent, location: e.target.value })
+              }
               placeholder="Enter event location"
             />
           </div>
@@ -284,11 +429,15 @@ export function EditEventDialog({ open, onOpenChange, event, onEventUpdated }: E
               id="edit-maxCapacity"
               type="number"
               min="1"
-              value={editEvent.maxCapacity || ''}
-              onChange={(e) => setEditEvent({ 
-                ...editEvent, 
-                maxCapacity: e.target.value ? parseInt(e.target.value) : undefined 
-              })}
+              value={editEvent.maxCapacity || ""}
+              onChange={(e) =>
+                setEditEvent({
+                  ...editEvent,
+                  maxCapacity: e.target.value
+                    ? parseInt(e.target.value)
+                    : undefined,
+                })
+              }
               placeholder="Enter maximum number of attendees"
             />
           </div>
@@ -296,10 +445,12 @@ export function EditEventDialog({ open, onOpenChange, event, onEventUpdated }: E
           {/* Custom Fields Section */}
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <Label className="text-base font-medium">Registration Form Fields</Label>
-              <Button 
-                type="button" 
-                variant="outline" 
+              <Label className="text-base font-medium">
+                Registration Form Fields
+              </Label>
+              <Button
+                type="button"
+                variant="outline"
                 size="sm"
                 onClick={addCustomField}
               >
@@ -307,20 +458,27 @@ export function EditEventDialog({ open, onOpenChange, event, onEventUpdated }: E
                 Add Field
               </Button>
             </div>
-            
+
             {customFields.length === 0 ? (
               <div className="text-center py-8 text-gray-500 border-2 border-dashed border-gray-200 rounded-lg">
                 <p>No custom fields added yet.</p>
-                <p className="text-sm">Click "Add Field" to create registration form fields.</p>
+                <p className="text-sm">
+                  Click "Add Field" to create registration form fields.
+                </p>
               </div>
             ) : (
               <div className="space-y-4">
                 {customFields.map((field, index) => (
-                  <div key={field.tempId} className="border rounded-lg p-4 space-y-4 bg-gray-50">
+                  <div
+                    key={field.tempId}
+                    className="border rounded-lg p-4 space-y-4 bg-gray-50"
+                  >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <GripVertical className="h-4 w-4 text-gray-400" />
-                        <span className="text-sm font-medium text-gray-700">Field {index + 1}</span>
+                        <span className="text-sm font-medium text-gray-700">
+                          Field {index + 1}
+                        </span>
                         {field.id && (
                           <span className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
                             Existing
@@ -340,24 +498,35 @@ export function EditEventDialog({ open, onOpenChange, event, onEventUpdated }: E
 
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <Label htmlFor={`edit-field-label-${field.tempId}`}>Field Label *</Label>
+                        <Label htmlFor={`edit-field-label-${field.tempId}`}>
+                          Field Label *
+                        </Label>
                         <Input
                           id={`edit-field-label-${field.tempId}`}
                           value={field.label}
-                          onChange={(e) => updateCustomField(field.tempId, { label: e.target.value })}
+                          onChange={(e) =>
+                            updateCustomField(field.tempId, {
+                              label: e.target.value,
+                            })
+                          }
                           placeholder="Enter field label"
                         />
                       </div>
                       <div>
-                        <Label htmlFor={`edit-field-type-${field.tempId}`}>Field Type</Label>
-                        <Select 
-                          value={field.controlType} 
-                          onValueChange={(value: CustomFieldType) => 
-                            updateCustomField(field.tempId, { 
+                        <Label htmlFor={`edit-field-type-${field.tempId}`}>
+                          Field Type
+                        </Label>
+                        <Select
+                          value={field.controlType}
+                          onValueChange={(value: CustomFieldType) =>
+                            updateCustomField(field.tempId, {
                               controlType: value,
-                              options: value === 'multiselect' || value === 'toggle' ? 
-                                (field.options && field.options.length > 0 ? field.options : ['']) : 
-                                undefined
+                              options:
+                                value === "multiselect" || value === "toggle"
+                                  ? field.options && field.options.length > 0
+                                    ? field.options
+                                    : [""]
+                                  : undefined,
                             })
                           }
                         >
@@ -367,8 +536,12 @@ export function EditEventDialog({ open, onOpenChange, event, onEventUpdated }: E
                           <SelectContent>
                             <SelectItem value="text">Text Input</SelectItem>
                             <SelectItem value="textarea">Textarea</SelectItem>
-                            <SelectItem value="toggle">Toggle (Yes/No)</SelectItem>
-                            <SelectItem value="multiselect">Multiple Choice</SelectItem>
+                            <SelectItem value="toggle">
+                              Toggle (Yes/No)
+                            </SelectItem>
+                            <SelectItem value="multiselect">
+                              Multiple Choice
+                            </SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -378,21 +551,28 @@ export function EditEventDialog({ open, onOpenChange, event, onEventUpdated }: E
                       <Checkbox
                         id={`edit-field-required-${field.tempId}`}
                         checked={Boolean(field.isRequired)}
-                        onCheckedChange={(checked) => 
-                          updateCustomField(field.tempId, { isRequired: !!checked })
+                        onCheckedChange={(checked) =>
+                          updateCustomField(field.tempId, {
+                            isRequired: !!checked,
+                          })
                         }
                       />
-                      <Label htmlFor={`edit-field-required-${field.tempId}`}>Required field</Label>
+                      <Label htmlFor={`edit-field-required-${field.tempId}`}>
+                        Required field
+                      </Label>
                     </div>
 
                     {/* Options for multiselect and toggle */}
-                    {(field.controlType === 'multiselect' || field.controlType === 'toggle') && (
+                    {(field.controlType === "multiselect" ||
+                      field.controlType === "toggle") && (
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <Label className="text-sm">
-                            {field.controlType === 'toggle' ? 'Options (Yes/No labels)' : 'Options'}
+                            {field.controlType === "toggle"
+                              ? "Options (Yes/No labels)"
+                              : "Options"}
                           </Label>
-                          {field.controlType === 'multiselect' && (
+                          {field.controlType === "multiselect" && (
                             <Button
                               type="button"
                               variant="outline"
@@ -405,41 +585,59 @@ export function EditEventDialog({ open, onOpenChange, event, onEventUpdated }: E
                           )}
                         </div>
                         {field.options?.map((option, optionIndex) => (
-                          <div key={optionIndex} className="flex items-center gap-2">
+                          <div
+                            key={optionIndex}
+                            className="flex items-center gap-2"
+                          >
                             <Input
                               value={option}
-                              onChange={(e) => updateFieldOption(field.tempId, optionIndex, e.target.value)}
+                              onChange={(e) =>
+                                updateFieldOption(
+                                  field.tempId,
+                                  optionIndex,
+                                  e.target.value
+                                )
+                              }
                               placeholder={
-                                field.controlType === 'toggle' 
-                                  ? optionIndex === 0 ? 'Yes label' : 'No label'
+                                field.controlType === "toggle"
+                                  ? optionIndex === 0
+                                    ? "Yes label"
+                                    : "No label"
                                   : `Option ${optionIndex + 1}`
                               }
                             />
-                            {field.controlType === 'multiselect' && field.options && field.options.length > 1 && (
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => removeFieldOption(field.tempId, optionIndex)}
-                                className="text-red-600 hover:text-red-700"
-                              >
-                                <X className="h-4 w-4" />
-                              </Button>
-                            )}
+                            {field.controlType === "multiselect" &&
+                              field.options &&
+                              field.options.length > 1 && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() =>
+                                    removeFieldOption(field.tempId, optionIndex)
+                                  }
+                                  className="text-red-600 hover:text-red-700"
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              )}
                           </div>
                         ))}
-                        {field.controlType === 'toggle' && (!field.options || field.options.length < 2) && (
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => updateCustomField(field.tempId, { 
-                              options: ['Yes', 'No'] 
-                            })}
-                          >
-                            Set Default Yes/No
-                          </Button>
-                        )}
+                        {field.controlType === "toggle" &&
+                          (!field.options || field.options.length < 2) && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                updateCustomField(field.tempId, {
+                                  options: ["Yes", "No"],
+                                })
+                              }
+                            >
+                              Set Default Yes/No
+                            </Button>
+                          )}
                       </div>
                     )}
                   </div>
@@ -450,18 +648,22 @@ export function EditEventDialog({ open, onOpenChange, event, onEventUpdated }: E
         </div>
 
         <DialogFooter>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={loading}
           >
             Cancel
           </Button>
-          <Button onClick={handleUpdate} disabled={loading} className="bg-[#E91E63] hover:bg-[#C2185B] text-white">
-            {loading ? 'Updating...' : 'Update Event'}
+          <Button
+            onClick={handleUpdate}
+            disabled={loading}
+            className="bg-[#E91E63] hover:bg-[#C2185B] text-white"
+          >
+            {loading ? "Updating..." : "Update Event"}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

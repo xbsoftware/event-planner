@@ -43,6 +43,7 @@ model Event {
   label           String    // Event title/name
   description     String?   // Full description with rich text
   shortDescription String?  // Brief description for cards
+  avatarUrl       String?   // Public URL of avatar image
   startDate       DateTime  // Event start date
   endDate         DateTime? // Optional end date (null for single day events)
   startTime       String?   // Optional start time (HH:MM format)

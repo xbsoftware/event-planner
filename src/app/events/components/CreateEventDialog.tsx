@@ -59,6 +59,7 @@ export function CreateEventDialog({
     label: "",
     description: "",
     shortDescription: "",
+    avatarUrl: "",
     startDate: "",
     endDate: "",
     startTime: "",
@@ -72,6 +73,10 @@ export function CreateEventDialog({
   // Custom Fields State
   const [customFields, setCustomFields] = useState<CustomFieldForm[]>([]);
   const [fieldCounter, setFieldCounter] = useState(0);
+  const [uploading, setUploading] = useState(false);
+  const [existingUploads, setExistingUploads] = useState<
+    { name: string; url: string }[]
+  >([]);
 
   // Populate form when opening with initial data (e.g., Copy Event)
   useEffect(() => {
@@ -81,6 +86,7 @@ export function CreateEventDialog({
         label: initialData.label || "",
         description: initialData.description || "",
         shortDescription: initialData.shortDescription || "",
+        avatarUrl: initialData.avatarUrl || "",
         startDate: initialData.startDate || "",
         endDate: initialData.endDate || "",
         startTime: initialData.startTime || "",
@@ -104,6 +110,17 @@ export function CreateEventDialog({
       setFieldCounter(fields.length);
     }
   }, [open, initialData, user]);
+
+  useEffect(() => {
+    const loadUploads = async () => {
+      try {
+        const res = await fetch("/api/upload");
+        const data = await res.json();
+        if (res.ok) setExistingUploads(data.uploads || []);
+      } catch {}
+    };
+    if (open) loadUploads();
+  }, [open]);
 
   const resetForm = () => {
     setNewEvent({
@@ -244,6 +261,76 @@ export function CreateEventDialog({
               }
               placeholder="Enter event name"
             />
+          </div>
+
+          <div>
+            <Label htmlFor="avatarUrl">Avatar Image URL</Label>
+            <Input
+              id="avatarUrl"
+              value={newEvent.avatarUrl || ""}
+              onChange={(e) =>
+                setNewEvent({ ...newEvent, avatarUrl: e.target.value })
+              }
+              placeholder="https://... or /uploads/..."
+            />
+            <div className="mt-2 flex items-center gap-2">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  try {
+                    setUploading(true);
+                    const fd = new FormData();
+                    fd.append("file", file);
+                    const res = await fetch("/api/upload", {
+                      method: "POST",
+                      body: fd,
+                    });
+                    const data = await res.json();
+                    if (!res.ok) throw new Error(data.error || "Upload failed");
+                    setNewEvent((prev) => ({ ...prev, avatarUrl: data.url }));
+                  } catch (err: any) {
+                    toast.error(err.message || "Upload failed");
+                  } finally {
+                    setUploading(false);
+                  }
+                }}
+              />
+              {uploading && (
+                <span className="text-xs text-gray-500">Uploading...</span>
+              )}
+            </div>
+            {existingUploads.length > 0 && (
+              <div className="mt-2">
+                <Label className="text-sm">Or pick from existing</Label>
+                <div className="mt-1 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 max-h-40 overflow-auto p-1 border rounded">
+                  {existingUploads.map((u) => (
+                    <button
+                      key={u.url}
+                      type="button"
+                      className={`relative h-16 rounded overflow-hidden border ${
+                        newEvent.avatarUrl === u.url
+                          ? "ring-2 ring-[#E91E63]"
+                          : ""
+                      }`}
+                      onClick={() =>
+                        setNewEvent((prev) => ({ ...prev, avatarUrl: u.url }))
+                      }
+                      title={u.name}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={u.url}
+                        alt={u.name}
+                        className="object-cover w-full h-full"
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           <div>

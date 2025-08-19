@@ -1,6 +1,7 @@
 "use client";
 
 import { Card, CardContent } from "@/components/ui/card";
+import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, MapPin, Users } from "lucide-react";
 import { EventData } from "@/services/eventService";
@@ -55,25 +56,41 @@ export function EventCard({ event, onEdit, onDelete, onCopy }: EventCardProps) {
     >
       <CardContent className="p-6 flex flex-col h-full">
         {/* Header */}
-        <div className="flex items-start justify-between mb-4">
+        <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
-              {event.label}
-            </h3>
-            {event.shortDescription && (
-              <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                {event.shortDescription}
-              </p>
-            )}
-          </div>
-          <div className="flex flex-col items-end space-y-1 ml-4">
             <Badge
               variant={getEventStatusVariant(event)}
-              className={getEventStatusClassName(event)}
+              className={`${getEventStatusClassName(event)} mb-2`}
             >
               {badgeText}
             </Badge>
-            {!event.isActive && <Badge variant="destructive">Inactive</Badge>}
+          </div>
+          {!event.isActive && <Badge variant="destructive">Inactive</Badge>}
+        </div>
+
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex-1 flex items-start gap-3">
+            {event.avatarUrl && (
+              <div className="flex-shrink-0">
+                <Image
+                  src={event.avatarUrl}
+                  alt={event.label}
+                  width={80}
+                  height={80}
+                  className="rounded-md object-cover w-20 h-20"
+                />
+              </div>
+            )}
+            <div className="min-w-0">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-3">
+                {event.label}
+              </h3>
+              {event.shortDescription && (
+                <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                  {event.shortDescription}
+                </p>
+              )}
+            </div>
           </div>
         </div>
 

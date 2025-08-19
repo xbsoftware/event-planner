@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { formatDateShort } from "@/lib/utils/dateTime";
 import AuthenticatedLayout from "@/components/AuthenticatedLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,6 +26,7 @@ interface Event {
   id: string;
   label: string;
   shortDescription?: string;
+  avatarUrl?: string;
   startDate: string;
   endDate?: string;
   location?: string;
@@ -45,6 +47,7 @@ interface Registration {
     id: string;
     label: string;
     shortDescription?: string;
+    avatarUrl?: string;
     startDate: string;
     endDate?: string;
     location?: string;
@@ -138,6 +141,7 @@ export default function Dashboard() {
                     id: event.id,
                     label: event.label,
                     shortDescription: event.shortDescription,
+                    avatarUrl: event.avatarUrl,
                     startDate: event.startDate,
                     endDate: event.endDate,
                     location: event.location,
@@ -465,7 +469,17 @@ export default function Dashboard() {
                         onClick={() => router.push(`/events/${event.id}`)}
                       >
                         <div className="flex items-center space-x-4">
-                          <Calendar className="h-8 w-8 text-[#E91E63]" />
+                          {event.avatarUrl ? (
+                            <Image
+                              src={event.avatarUrl}
+                              alt={event.label}
+                              width={48}
+                              height={48}
+                              className="rounded-md object-cover w-12 h-12"
+                            />
+                          ) : (
+                            <Calendar className="h-8 w-8 text-[#E91E63]" />
+                          )}
                           <div>
                             <h3 className="font-medium">{event.label}</h3>
                             <p className="text-sm text-gray-600">
@@ -512,7 +526,17 @@ export default function Dashboard() {
                       }
                     >
                       <div className="flex items-center space-x-4">
-                        <Calendar className="h-8 w-8 text-[#E91E63]" />
+                        {registration.event.avatarUrl ? (
+                          <Image
+                            src={registration.event.avatarUrl}
+                            alt={registration.event.label}
+                            width={48}
+                            height={48}
+                            className="rounded-md object-cover w-12 h-12"
+                          />
+                        ) : (
+                          <Calendar className="h-8 w-8 text-[#E91E63]" />
+                        )}
                         <div>
                           <h3 className="font-medium">
                             {registration.event.label}

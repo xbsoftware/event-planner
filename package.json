@@ -8,9 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
-
     "db:seed": "tsx prisma/seed.ts",
-    "db:reset": "npx prisma db push --force-reset && npm run db:seed"
+    "db:reset": "npx prisma db push --force-reset && npm run db:seed",
+    "gen:avatars": "node scripts/generate-event-avatars.mjs"
   },
   "dependencies": {
     "@libsql/client": "^0.15.12",
@@ -53,6 +53,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.4.6",
     "postcss": "^8.5.6",
+    "sharp": "^0.33.5",
     "tsx": "^4.20.4",
     "typescript": "^5"
   }
