@@ -103,6 +103,7 @@ export function EventCard({ event, onEdit, onDelete }: EventCardProps) {
                 event={event}
                 onEdit={onEdit}
                 onDelete={onDelete}
+                compact
               />
             ) : (
               <UserActions event={event} />

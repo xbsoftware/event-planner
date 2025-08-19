@@ -1,6 +1,6 @@
 "use client";
 
-import AuthenticatedLayout from "@/components/AuthenticatedLayout";
+// Public view; no auth wrapper
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,7 @@ import {
   UserX,
   Edit,
   Printer,
+  Share2,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -46,6 +47,7 @@ import {
   getEventStatusClassName,
 } from "@/lib/utils/eventStatus";
 import { formatDateLong, formatTimeShort } from "@/lib/utils/dateTime";
+import { shareEventLink } from "@/lib/utils/share";
 
 export default function EventViewPage() {
   const params = useParams();
@@ -877,59 +879,61 @@ export default function EventViewPage() {
 
   if (loading) {
     return (
-      <AuthenticatedLayout>
-        <div className="container mx-auto px-4 py-8">
-          <div className="animate-pulse">
-            <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
-            <div className="bg-white rounded-lg shadow-sm border p-6">
-              <div className="h-8 bg-gray-200 rounded w-3/4 mb-4"></div>
-              <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
-              <div className="space-y-3">
-                <div className="h-4 bg-gray-200 rounded w-full"></div>
-                <div className="h-4 bg-gray-200 rounded w-full"></div>
-                <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-              </div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-1/4 mb-6"></div>
+          <div className="bg-white rounded-lg shadow-sm border p-6">
+            <div className="h-8 bg-gray-200 rounded w-3/4 mb-4"></div>
+            <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
+            <div className="space-y-3">
+              <div className="h-4 bg-gray-200 rounded w-full"></div>
+              <div className="h-4 bg-gray-200 rounded w-full"></div>
+              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
             </div>
           </div>
         </div>
-      </AuthenticatedLayout>
+      </div>
     );
   }
 
   if (!event) {
     return (
-      <AuthenticatedLayout>
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">
-              Event Not Found
-            </h1>
-            <p className="text-gray-600 mb-6">
-              The event you're looking for doesn't exist or has been removed.
-            </p>
-            <Button onClick={() => router.back()}>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Go Back
-            </Button>
-          </div>
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">
+            Event Not Found
+          </h1>
+          <p className="text-gray-600 mb-6">
+            The event you're looking for doesn't exist or has been removed.
+          </p>
+          <Button onClick={() => router.back()}>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Go Back
+          </Button>
         </div>
-      </AuthenticatedLayout>
+      </div>
     );
   }
 
   return (
-    <AuthenticatedLayout>
+    <>
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <Button
-            variant="ghost"
-            onClick={() => router.push("/events")}
-            className="text-gray-600 hover:text-gray-900"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Events
-          </Button>
+        <div
+          className={`flex items-center ${
+            user ? "justify-between" : "justify-end"
+          } mb-6`}
+        >
+          {user && (
+            <Button
+              variant="ghost"
+              onClick={() => router.push("/events")}
+              className="text-gray-600 hover:text-gray-900"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Events
+            </Button>
+          )}
 
           <div className="flex gap-2">
             <Button
@@ -954,6 +958,19 @@ export default function EventViewPage() {
                 Edit Event
               </Button>
             )}
+            <Button
+              variant="outline"
+              onClick={async () => {
+                const { result } = await shareEventLink(event.id, event.label);
+                toast.success(
+                  result === "shared" ? "Share dialog opened" : "Link copied"
+                );
+              }}
+              className="border-[#E91E63] text-[#E91E63] hover:bg-[#E91E63] hover:text-white"
+            >
+              <Share2 className="h-4 w-4 mr-2" />
+              Share
+            </Button>
           </div>
         </div>
 
@@ -1402,6 +1419,6 @@ export default function EventViewPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </AuthenticatedLayout>
+    </>
   );
 }
