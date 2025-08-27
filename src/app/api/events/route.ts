@@ -24,41 +24,49 @@ export async function GET(request: NextRequest) {
     console.log("Current user ID:", currentUserId);
 
     const events = await (prisma.event as any).findMany({
-      include: {
+      select: {
+        id: true,
+        label: true,
+        description: true,
+        shortDescription: true,
+        avatarUrl: true,
+        startDate: true,
+        endDate: true,
+        startTime: true,
+        endTime: true,
+        location: true,
+        maxCapacity: true,
+        isActive: true,
+        createdAt: true,
+        updatedAt: true,
         createdBy: {
-          select: {
-            id: true,
-            firstName: true,
-            lastName: true,
-            email: true,
-          },
+          select: { id: true, firstName: true, lastName: true, email: true },
         },
         customFields: {
-          orderBy: {
-            order: "asc",
-          },
-        },
-        registrations: {
+          orderBy: { order: "asc" },
           select: {
             id: true,
-            status: true,
-            userId: true,
-            registeredAt: true,
+            label: true,
+            controlType: true,
+            isRequired: true,
+            options: true,
+            order: true,
           },
         },
+        registrations: currentUserId
+          ? {
+              // only fetch what's needed to compute per-user status
+              select: { id: true, status: true, userId: true },
+              where: { status: { not: "CANCELLED" } },
+            }
+          : undefined,
         _count: {
           select: {
-            registrations: {
-              where: {
-                status: { not: "CANCELLED" },
-              },
-            },
+            registrations: { where: { status: { not: "CANCELLED" } } },
           },
         },
       },
-      orderBy: {
-        startDate: "asc",
-      },
+      orderBy: { startDate: "asc" },
     });
 
     console.log(`Found ${events.length} events in database`);
@@ -109,7 +117,7 @@ export async function GET(request: NextRequest) {
           options: field.options ? JSON.parse(field.options) : null,
           order: field.order,
         })),
-        registrations: event.registrations || [], // Include registrations array
+        // Do not include full registrations array in list payload
         registrationCount: event._count.registrations,
         _count: {
           registrations: event._count.registrations,

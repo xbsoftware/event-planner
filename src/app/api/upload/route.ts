@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { promises as fs } from "fs";
 import path from "path";
+import crypto from "crypto";
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,19 +11,28 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    // Basic content-type guard (optional)
-    const allowed = [
+    // Content-type and size guards
+    const allowed = new Set([
       "image/png",
       "image/jpeg",
       "image/webp",
       "image/gif",
       "image/svg+xml",
-    ];
-    const contentType = file.type || "";
-    if (contentType && !allowed.includes(contentType)) {
+    ]);
+    const contentType = (file as any).type || "";
+    if (!allowed.has(contentType)) {
       return NextResponse.json(
         { error: "Unsupported file type" },
         { status: 400 }
+      );
+    }
+
+    const maxBytes = 2 * 1024 * 1024; // 2MB
+    const fileSize = (file as any).size ?? 0;
+    if (fileSize > maxBytes) {
+      return NextResponse.json(
+        { error: "File too large (max 2MB)" },
+        { status: 413 }
       );
     }
 
@@ -33,13 +43,21 @@ export async function POST(req: NextRequest) {
     const uploadDir = path.join(process.cwd(), "public", "upload");
     await fs.mkdir(uploadDir, { recursive: true });
 
-    // Build a safe filename
-    const original = file.name || "upload";
-    const base = original.replace(/[^a-zA-Z0-9._-]/g, "_");
-    const stamp = Date.now().toString(36);
-    const ext = path.extname(base) || "";
-    const name = path.basename(base, ext).slice(0, 80) || "file";
-    const finalName = `${name}-${stamp}${ext}`;
+    // Build a randomized filename based on content type (avoid user-provided names)
+    const uuid = crypto.randomUUID();
+    const ext =
+      contentType === "image/png"
+        ? ".png"
+        : contentType === "image/jpeg"
+        ? ".jpg"
+        : contentType === "image/webp"
+        ? ".webp"
+        : contentType === "image/gif"
+        ? ".gif"
+        : contentType === "image/svg+xml"
+        ? ".svg"
+        : "";
+    const finalName = `${uuid}${ext}`;
     const filePath = path.join(uploadDir, finalName);
 
     await fs.writeFile(filePath, buffer);

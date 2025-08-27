@@ -21,24 +21,9 @@ import {
 import { useAuthStore } from "@/lib/stores/authStore";
 import apiClient from "@/lib/apiClient";
 import { toast } from "sonner";
+import type { EventData } from "@/services/eventService";
 
-interface Event {
-  id: string;
-  label: string;
-  shortDescription?: string;
-  avatarUrl?: string;
-  startDate: string;
-  endDate?: string;
-  location?: string;
-  status: "DRAFT" | "ACTIVE" | "COMPLETED" | "CANCELLED";
-  registrations?: Array<{
-    id: string;
-    status: "CONFIRMED" | "CANCELLED";
-  }>;
-  _count?: {
-    registrations: number;
-  };
-}
+type Event = EventData;
 
 interface Registration {
   id: string;
@@ -89,13 +74,15 @@ export default function Dashboard() {
 
         // Calculate manager stats
         const totalEvents = eventsData.length;
-        const upcomingEvents = eventsData.filter(
-          (e: Event) =>
-            e.status === "ACTIVE" && new Date(e.startDate) > new Date()
-        ).length;
-        const completedEvents = eventsData.filter(
-          (e: Event) => e.status === "COMPLETED"
-        ).length;
+        const nowTs = Date.now();
+        const upcomingEvents = eventsData.filter((e: Event) => {
+          const startTs = new Date(e.startDate).getTime();
+          return e.isActive && startTs > nowTs;
+        }).length;
+        const completedEvents = eventsData.filter((e: Event) => {
+          const endTs = new Date(e.endDate || e.startDate).getTime();
+          return endTs < nowTs;
+        }).length;
 
         // Calculate total registrations across all events
         const totalRegistrations = eventsData.reduce(
@@ -105,16 +92,7 @@ export default function Dashboard() {
           0
         );
 
-        const confirmedRegistrations = eventsData.reduce(
-          (sum: number, event: Event) => {
-            return (
-              sum +
-              (event.registrations?.filter((r) => r.status === "CONFIRMED")
-                .length || 0)
-            );
-          },
-          0
-        );
+        const confirmedRegistrations = totalRegistrations;
 
         setStats({
           totalEvents,
@@ -124,35 +102,25 @@ export default function Dashboard() {
           confirmedRegistrations,
         });
       } else {
-        // Load registrations for regular users
-        const userEventsResponse = await apiClient.get("/api/events");
-        const allEvents = userEventsResponse.data.events || [];
-
-        // Filter events that user has registered for
-        const userRegistrations: Registration[] = [];
-        allEvents.forEach((event: any) => {
-          if (event.registrations && Array.isArray(event.registrations)) {
-            event.registrations.forEach((reg: any) => {
-              if (reg.userId === user?.id) {
-                userRegistrations.push({
-                  id: reg.id,
-                  status: reg.status,
-                  event: {
-                    id: event.id,
-                    label: event.label,
-                    shortDescription: event.shortDescription,
-                    avatarUrl: event.avatarUrl,
-                    startDate: event.startDate,
-                    endDate: event.endDate,
-                    location: event.location,
-                    status:
-                      event.status || (event.isActive ? "ACTIVE" : "DRAFT"),
-                  },
-                });
-              }
-            });
-          }
-        });
+        // Load events and derive user's registrations from isUserRegistered flags
+        const res = await apiClient.get("/api/events");
+        const allEvents = res.data.events || [];
+        const userRegistrations: Registration[] = allEvents
+          .filter((event: any) => event.isUserRegistered)
+          .map((event: any) => ({
+            id: `${event.id}-self`,
+            status: event.userRegistrationStatus || "CONFIRMED",
+            event: {
+              id: event.id,
+              label: event.label,
+              shortDescription: event.shortDescription,
+              avatarUrl: event.avatarUrl,
+              startDate: event.startDate,
+              endDate: event.endDate,
+              location: event.location,
+              status: event.status || (event.isActive ? "ACTIVE" : "DRAFT"),
+            },
+          }));
 
         setRegistrations(userRegistrations);
 
@@ -205,9 +173,15 @@ export default function Dashboard() {
     const startDate = new Date(event.startDate);
     const endDate = event.endDate ? new Date(event.endDate) : startDate;
 
-    if (event.status === "COMPLETED") return "completed";
-    if (event.status === "CANCELLED") return "cancelled";
-    if (event.status === "DRAFT") return "draft";
+    // Prefer flags over status string
+    if (!("status" in event)) {
+      if (now > endDate) return "completed";
+      if (now >= startDate && now <= endDate) return "ongoing";
+      return event ? "upcoming" : "upcoming";
+    }
+    if ((event as any).status === "COMPLETED") return "completed";
+    if ((event as any).status === "CANCELLED") return "cancelled";
+    if ((event as any).status === "DRAFT") return "draft";
     if (now > endDate) return "completed";
     if (now >= startDate && now <= endDate) return "ongoing";
     return "upcoming";
@@ -475,6 +449,8 @@ export default function Dashboard() {
                               alt={event.label}
                               width={48}
                               height={48}
+                              sizes="48px"
+                              loading="lazy"
                               className="rounded-md object-cover w-12 h-12"
                             />
                           ) : (
@@ -532,6 +508,8 @@ export default function Dashboard() {
                             alt={registration.event.label}
                             width={48}
                             height={48}
+                            sizes="48px"
+                            loading="lazy"
                             className="rounded-md object-cover w-12 h-12"
                           />
                         ) : (

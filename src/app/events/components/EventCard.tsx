@@ -77,6 +77,8 @@ export function EventCard({ event, onEdit, onDelete, onCopy }: EventCardProps) {
                   alt={event.label}
                   width={80}
                   height={80}
+                  sizes="(min-width: 1024px) 80px, 80px"
+                  loading="lazy"
                   className="rounded-md object-cover w-20 h-20"
                 />
               </div>

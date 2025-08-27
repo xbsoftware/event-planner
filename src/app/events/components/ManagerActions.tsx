@@ -25,12 +25,8 @@ export function ManagerActions({
   const router = useRouter();
   const isCompact = !!compact;
   const containerSpacing = isCompact ? "space-x-1" : "space-x-2";
-  const outlineClass = "hover:!bg-[#E91E63] hover:!text-white";
-  const outlineStyle = {
-    borderColor: "#E91E63",
-    color: "#E91E63",
-    backgroundColor: "transparent",
-  } as const;
+  const outlineClasses =
+    "border-[#E91E63] text-[#E91E63] hover:bg-[#E91E63] hover:text-white";
 
   return (
     <div
@@ -41,17 +37,8 @@ export function ManagerActions({
         variant="outline"
         size={isCompact ? "icon" : "sm"}
         onClick={() => onCopy?.(event)}
-        style={outlineStyle}
-        className={outlineClass}
+        className={outlineClasses}
         title="Copy"
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = "#E91E63";
-          e.currentTarget.style.color = "white";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = "transparent";
-          e.currentTarget.style.color = "#E91E63";
-        }}
       >
         <Copy className={isCompact ? "h-4 w-4" : "h-4 w-4 mr-1"} />
         {!isCompact && <span>Copy</span>}
@@ -65,17 +52,8 @@ export function ManagerActions({
             result === "shared" ? "Share dialog opened" : "Link copied"
           );
         }}
-        style={outlineStyle}
-        className={outlineClass}
+        className={outlineClasses}
         title="Share"
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = "#E91E63";
-          e.currentTarget.style.color = "white";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = "transparent";
-          e.currentTarget.style.color = "#E91E63";
-        }}
       >
         <Share2 className={isCompact ? "h-4 w-4" : "h-4 w-4 mr-1"} />
         {!isCompact && <span>Share</span>}
@@ -84,17 +62,8 @@ export function ManagerActions({
         variant="outline"
         size={isCompact ? "icon" : "sm"}
         onClick={() => router.push(`/events/${event.id}`)}
-        style={outlineStyle}
-        className={outlineClass}
+        className={outlineClasses}
         title="View"
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = "#E91E63";
-          e.currentTarget.style.color = "white";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = "transparent";
-          e.currentTarget.style.color = "#E91E63";
-        }}
       >
         <Eye className={isCompact ? "h-4 w-4" : "h-4 w-4 mr-1"} />
         {!isCompact && <span>View</span>}
@@ -103,17 +72,8 @@ export function ManagerActions({
         variant="outline"
         size={isCompact ? "icon" : "sm"}
         onClick={() => onEdit(event)}
-        style={outlineStyle}
-        className={outlineClass}
+        className={outlineClasses}
         title="Edit"
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = "#E91E63";
-          e.currentTarget.style.color = "white";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = "transparent";
-          e.currentTarget.style.color = "#E91E63";
-        }}
       >
         <Edit className={isCompact ? "h-4 w-4" : "h-4 w-4 mr-1"} />
         {!isCompact && <span>Edit</span>}

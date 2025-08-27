@@ -2,7 +2,11 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { formatDateReadable, formatDateShort } from "@/lib/utils/dateTime";
+import {
+  formatDateReadable,
+  formatDateShort,
+  formatDateTimeShort,
+} from "@/lib/utils/dateTime";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -186,7 +190,7 @@ export default function AdminUsersPage() {
                     </TableCell>
                     <TableCell className="text-sm text-gray-600">
                       {userData.lastLoginAt
-                        ? formatDate(userData.lastLoginAt)
+                        ? formatDateTimeShort(userData.lastLoginAt)
                         : "Never"}
                     </TableCell>
                     <TableCell>

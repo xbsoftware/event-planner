@@ -37,7 +37,7 @@ import {
   Share2,
   Copy,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { EventService, EventData } from "@/services";
 import { useAuthStore } from "@/lib/stores/authStore";
@@ -75,20 +75,7 @@ export default function EventViewPage() {
   >({});
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  useEffect(() => {
-    if (params.id) {
-      loadEvent();
-    }
-  }, [params.id]);
-
-  // Check registration status whenever user becomes available or changes
-  useEffect(() => {
-    if (user && params.id) {
-      checkRegistrationStatus();
-    }
-  }, [user, params.id]);
-
-  const loadEvent = async () => {
+  const loadEvent = useCallback(async () => {
     try {
       setLoading(true);
       const eventData = await EventService.getEventById(params.id as string);
@@ -99,10 +86,18 @@ export default function EventViewPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [params.id]);
 
-  const checkRegistrationStatus = async () => {
-    if (!user) return;
+  useEffect(() => {
+    if (params.id) {
+      loadEvent();
+    }
+  }, [params.id, loadEvent]);
+
+  // (moved below after function declaration)
+
+  const checkRegistrationStatus = useCallback(async () => {
+    if (!user || !params.id) return;
 
     try {
       const registration = await EventService.getUserRegistration(
@@ -128,7 +123,12 @@ export default function EventViewPage() {
     } catch (error) {
       console.error("Error checking registration status:", error);
     }
-  };
+  }, [user?.id, params.id]);
+
+  // Check registration status whenever user/params change
+  useEffect(() => {
+    checkRegistrationStatus();
+  }, [checkRegistrationStatus]);
 
   const handleJoinEvent = async () => {
     if (!user || !event) return;
@@ -1002,6 +1002,9 @@ export default function EventViewPage() {
                           alt={event.label}
                           width={96}
                           height={96}
+                          sizes="(min-width: 768px) 96px, 96px"
+                          loading="eager"
+                          priority
                           className="rounded-md object-cover w-24 h-24"
                         />
                       </div>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { authenticateRequest, hasRole } from "@/lib/auth";
 
 export async function GET(
   request: NextRequest,
@@ -79,6 +80,11 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = authenticateRequest(request);
+    if (!auth.isAuthenticated || !auth.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const resolvedParams = await params;
     const eventId = resolvedParams.id;
     const body = await request.json();
@@ -97,8 +103,8 @@ export async function PUT(
       customFields,
     } = body;
 
-    // Validate user role
-    if (currentUserRole !== "MANAGER") {
+    // Validate user role server-side
+    if (!hasRole(auth.user, "MANAGER") || currentUserRole !== "MANAGER") {
       return NextResponse.json(
         { error: "Access denied. Manager role required." },
         { status: 403 }
@@ -301,13 +307,18 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = authenticateRequest(request);
+    if (!auth.isAuthenticated || !auth.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const resolvedParams = await params;
     const eventId = resolvedParams.id;
     const body = await request.json();
     const { currentUserRole } = body;
 
-    // Validate user role
-    if (currentUserRole !== "MANAGER") {
+    // Validate user role server-side
+    if (!hasRole(auth.user, "MANAGER") || currentUserRole !== "MANAGER") {
       return NextResponse.json(
         { error: "Access denied. Manager role required." },
         { status: 403 }

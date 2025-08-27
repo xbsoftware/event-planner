@@ -35,6 +35,7 @@ export interface EventData {
   // New fields for user registration status
   isUserRegistered?: boolean;
   userRegistrationStatus?: string | null;
+  _count?: { registrations: number };
 }
 
 export interface CreateEventData {

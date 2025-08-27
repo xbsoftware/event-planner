@@ -1,26 +1,28 @@
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
-import { AuthService, ApiService } from '@/services'
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import { AuthService, ApiService } from "@/services";
 
 export interface User {
-  id: string
-  email: string
-  firstName: string | null
-  lastName: string | null
-  role: 'REGULAR' | 'MANAGER'
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  role: "REGULAR" | "MANAGER";
+  createdAt?: string;
+  lastLoginAt?: string | null;
 }
 
 interface AuthState {
-  user: User | null
-  token: string | null
-  isLoading: boolean
-  error: string | null
-  login: (email: string, password: string) => Promise<void>
-  logout: () => void
-  clearError: () => void
-  setUser: (user: User) => void
-  setToken: (token: string) => void
-  validateAndRefreshSession: () => Promise<void>
+  user: User | null;
+  token: string | null;
+  isLoading: boolean;
+  error: string | null;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
+  clearError: () => void;
+  setUser: (user: User) => void;
+  setToken: (token: string) => void;
+  validateAndRefreshSession: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -32,69 +34,71 @@ export const useAuthStore = create<AuthState>()(
       error: null,
 
       login: async (email: string, password: string) => {
-        set({ isLoading: true, error: null })
+        set({ isLoading: true, error: null });
 
         try {
-          const loginResponse = await AuthService.login({ email, password })
-          set({ 
-            user: loginResponse.user, 
+          const loginResponse = await AuthService.login({ email, password });
+          set({
+            user: loginResponse.user,
             token: loginResponse.token,
-            isLoading: false 
-          })
+            isLoading: false,
+          });
         } catch (error) {
-          const errorMessage = ApiService.getErrorMessage(error)
-          set({ error: errorMessage, isLoading: false })
+          const errorMessage = ApiService.getErrorMessage(error);
+          set({ error: errorMessage, isLoading: false });
         }
       },
 
       logout: () => {
-        set({ user: null, token: null, error: null })
-        window.location.href = '/'
+        set({ user: null, token: null, error: null });
+        window.location.href = "/";
       },
 
       clearError: () => {
-        set({ error: null })
+        set({ error: null });
       },
 
       setUser: (user: User) => {
-        set({ user })
+        set({ user });
       },
 
       setToken: (token: string) => {
-        set({ token })
+        set({ token });
       },
 
       validateAndRefreshSession: async () => {
-        const { token } = get()
-        console.log('Validating session, token exists:', !!token)
-        
+        const { token } = get();
+        console.log("Validating session, token exists:", !!token);
+
         if (!token) {
-          console.log('No token found, clearing session')
-          set({ user: null, token: null })
-          return
+          console.log("No token found, clearing session");
+          set({ user: null, token: null });
+          return;
         }
 
         try {
           // First, try to decode the token client-side to check if it's expired
-          const payload = JSON.parse(atob(token.split('.')[1]))
-          const isExpired = payload.exp && payload.exp * 1000 < Date.now()
-          
+          const payload = JSON.parse(atob(token.split(".")[1]));
+          const isExpired = payload.exp && payload.exp * 1000 < Date.now();
+
           if (isExpired) {
-            console.log('Token expired, clearing session')
-            set({ user: null, token: null })
-            return
+            console.log("Token expired, clearing session");
+            set({ user: null, token: null });
+            return;
           }
 
           // If token is not expired, try to validate with server
-          console.log('Calling validateSession API...')
-          const response = await AuthService.validateSession(token)
-          console.log('Session validation response:', !!response)
-          
+          console.log("Calling validateSession API...");
+          const response = await AuthService.validateSession(token);
+          console.log("Session validation response:", !!response);
+
           if (response) {
-            console.log('Session valid, updating user state')
-            set({ user: response.user, token: response.token })
+            console.log("Session valid, updating user state");
+            set({ user: response.user, token: response.token });
           } else {
-            console.log('Session validation failed, but token seems valid. Using cached user.')
+            console.log(
+              "Session validation failed, but token seems valid. Using cached user."
+            );
             // If server validation fails but token is valid, keep the user logged in
             // This handles cases where the validation endpoint has cold start issues
             if (payload.userId && payload.email && payload.role) {
@@ -103,43 +107,43 @@ export const useAuthStore = create<AuthState>()(
                 email: payload.email,
                 firstName: null,
                 lastName: null,
-                role: payload.role
-              }
-              set({ user, token })
+                role: payload.role,
+              };
+              set({ user, token });
             } else {
-              set({ user: null, token: null })
+              set({ user: null, token: null });
             }
           }
         } catch (error) {
-          console.error('Session validation error:', error)
+          console.error("Session validation error:", error);
           // On error, try to decode token and use cached info if valid
           try {
-            const payload = JSON.parse(atob(token.split('.')[1]))
-            const isExpired = payload.exp && payload.exp * 1000 < Date.now()
-            
+            const payload = JSON.parse(atob(token.split(".")[1]));
+            const isExpired = payload.exp && payload.exp * 1000 < Date.now();
+
             if (!isExpired && payload.userId && payload.email && payload.role) {
-              console.log('Using cached token data due to server error')
+              console.log("Using cached token data due to server error");
               const user = {
                 id: payload.userId,
                 email: payload.email,
                 firstName: null,
                 lastName: null,
-                role: payload.role
-              }
-              set({ user, token })
+                role: payload.role,
+              };
+              set({ user, token });
             } else {
-              set({ user: null, token: null })
+              set({ user: null, token: null });
             }
           } catch (tokenError) {
-            console.error('Failed to decode token:', tokenError)
-            set({ user: null, token: null })
+            console.error("Failed to decode token:", tokenError);
+            set({ user: null, token: null });
           }
         }
       },
     }),
     {
-      name: 'auth-storage', // unique name for localStorage key
+      name: "auth-storage", // unique name for localStorage key
       partialize: (state) => ({ user: state.user, token: state.token }), // persist user and token
     }
   )
-)
+);

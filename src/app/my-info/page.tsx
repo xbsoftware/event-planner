@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 import { useAuthStore } from "@/lib/stores/authStore";
 import { User, Mail, Crown, Settings, Save, Edit } from "lucide-react";
 import { useState, useEffect } from "react";
-import { UserService } from "@/services";
+import apiClient from "@/lib/apiClient";
+import { formatDateTimeShort } from "@/lib/utils/dateTime";
 
 export default function MyInfoPage() {
   const { user, setUser } = useAuthStore();
@@ -35,10 +36,11 @@ export default function MyInfoPage() {
     if (!user) return;
 
     setLoading(true);
-    const updatedUser = await UserService.updateProfile({
+    const res = await apiClient.put("/api/users/profile", {
       userId: user.id,
       ...formData,
     });
+    const updatedUser = res.data?.user;
 
     if (updatedUser) {
       setUser(updatedUser);
@@ -263,11 +265,19 @@ export default function MyInfoPage() {
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Member Since:</span>
-                    <span className="font-medium">Jan 2025</span>
+                    <span className="font-medium">
+                      {user.createdAt
+                        ? formatDateTimeShort(user.createdAt)
+                        : "—"}
+                    </span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Last Login:</span>
-                    <span className="font-medium">Today</span>
+                    <span className="font-medium">
+                      {user.lastLoginAt
+                        ? formatDateTimeShort(user.lastLoginAt)
+                        : "—"}
+                    </span>
                   </div>
                 </div>
               </CardContent>
