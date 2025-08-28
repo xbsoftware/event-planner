@@ -8,8 +8,10 @@
     "start": "next start",
     "lint": "next lint",
     "lint:fix": "next lint --fix",
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio",
     "db:seed": "tsx prisma/seed.ts",
-    "db:reset": "npx prisma db push --force-reset && npm run db:seed",
+    "db:reset": "prisma db push --force-reset && npm run db:seed",
     "gen:avatars": "node scripts/generate-event-avatars.mjs"
   },
   "dependencies": {
