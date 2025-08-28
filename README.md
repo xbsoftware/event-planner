@@ -1,6 +1,10 @@
-# XBS Events - Ubuntu Server Deployment Guide
+# Event Planner | React & Next.js Web App
 
-Complete guide for deploying the XBS Events application on a fresh Ubuntu server.
+**Event Planner** is a React/Next.js web application developed by XB Software for event organizers. Centralize events, track real-time metrics, and manage attendees from a single hub. The modular architecture enables seamless integration and customization, helping streamline workflows with minimal effort.
+
+# Ubuntu Server Deployment Guide
+
+Complete guide for deploying Event Planner on a fresh Ubuntu server.
 
 ## System Requirements
 
