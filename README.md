@@ -1,6 +1,7 @@
-# XBS Event Planner | React & Next.js Web App
+# XB Software Event Planner
 
 **Event Planner** is a React/Next.js web application developed by XB Software for event organizers. Centralize events, track real-time metrics, and manage attendees from a single hub. The modular architecture enables seamless integration and customization, helping streamline workflows with minimal effort.
+
 
 # Ubuntu Server Deployment Guide
 
@@ -89,7 +90,7 @@ mysql -u xbs_user -p xbs_events
 
 ```bash
 # Clone repository
-git clone https://github.com/your-username/xbs-events.git
+git clone https://github.com/xbsoftware/event-planner.git
 cd xbs-events
 
 # Install dependencies
