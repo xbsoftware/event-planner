@@ -207,3 +207,48 @@ pm2 save
 pm2 startup
 # Follow the instructions shown (run the suggested command)
 ```
+
+## Step 9: Install and Configure Nginx
+
+```bash
+# Install Nginx
+sudo apt install -y nginx
+
+# Create Nginx configuration
+sudo nano /etc/nginx/sites-available/xbs-events
+```
+
+**Add this content (replace YOUR_SERVER_IP with your actual server IP):**
+
+```nginx
+server {
+    listen 80;
+    server_name YOUR_SERVER_IP; # Replace with your domain or server IP
+
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+        proxy_redirect off;
+    }
+}
+```
+
+```bash
+# Enable site and remove default
+sudo ln -s /etc/nginx/sites-available/xbs-events /etc/nginx/sites-enabled/
+sudo rm /etc/nginx/sites-enabled/default
+
+# Test configuration
+sudo nginx -t
+
+# Start and enable Nginx
+sudo systemctl restart nginx
+sudo systemctl enable nginx
+```
