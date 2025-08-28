@@ -12,7 +12,7 @@ generator client {
 }
 
 datasource db {
-  provider = env("DB_PROVIDER") // "sqlite" for local, "mysql" for production
+  provider = "mysql" // "sqlite" for local, "mysql" for production
   url      = env("DATABASE_URL")
 }
 
