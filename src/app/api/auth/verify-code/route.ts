@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       data: { lastLoginAt: new Date() },
     });
 
-    // Create session data (in a real app, you'd use proper session management)
+    // Create session data (in a real app, we'd use proper session management)
     const sessionData = {
       userId: user.id,
       email: user.email,

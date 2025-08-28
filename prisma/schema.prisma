@@ -1,13 +1,18 @@
-// This is your Prisma schema file,
+// This is Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
+// Multi-environment Prisma schema
+// Local: SQLite (file:./dev.db)  
+// Production: MySQL on Ubuntu
+// Turso: libSQL (commented for reference)
+
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
+  provider = "prisma-client-js"
+  // previewFeatures = ["driverAdapters"] // For Turso/libSQL only
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = env("DB_PROVIDER") // "sqlite" for local, "mysql" for production
   url      = env("DATABASE_URL")
 }
 

@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // In a real app, you would send this code via email
+    // In a real app,  we would send this code via email
     // For demo purposes, we'll log it to console
     console.log(`Verification code for ${email}: ${code}`);
 

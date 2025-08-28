@@ -30,11 +30,7 @@ export async function POST(request: NextRequest) {
     let validPassword = false;
     if (user.password) {
       try {
-        console.log("Password to check:", password);
-        console.log("Hash from DB:", user.password);
-        bcrypt.hash("password123", 12).then(console.log);
         validPassword = await bcrypt.compare(password, user.password);
-        console.log("bcrypt.compare result:", validPassword);
       } catch (err) {
         console.error("bcrypt.compare error:", err);
       }
