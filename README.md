@@ -1,4 +1,4 @@
-# Event Planner | React & Next.js Web App
+# XBS Event Planner | React & Next.js Web App
 
 **Event Planner** is a React/Next.js web application developed by XB Software for event organizers. Centralize events, track real-time metrics, and manage attendees from a single hub. The modular architecture enables seamless integration and customization, helping streamline workflows with minimal effort.
 
